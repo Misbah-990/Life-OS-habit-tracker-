@@ -2122,8 +2122,7 @@ function rSet(){
         <div class="subj-btns">
           ${i>=5?`<button class="smb del" onclick="delCategory(${i})">✕</button>`:'<span style="font-size:0.6rem;color:var(--t4);font-family:var(--mono)">default</span>'}
         </div>
-      </div>`).join('')}
-  </div>`;
+      </div>`).join('');
   }
   // Stats
   const totalDays=Object.keys(db.logs).length;
