@@ -1364,12 +1364,15 @@ function rToday() {
   }
   document.getElementById('rings').innerHTML = ringsHTML;
 
-  // Habit list with proper score bars
-  const order = ['mind', 'body', 'money', 'digital', 'life'];
+  // Habit list with proper score bars — dynamic, supports custom categories
+  const allCatIds = getCats().map(c => c.id);
+  const extraCats = [...new Set(db.habits.map(h => h.cat))].filter(c => !allCatIds.includes(c));
+  const order = [...allCatIds, ...extraCats];
   let h = '';
   order.forEach(cat => {
     const ch = db.habits.filter(x => x.cat === cat); if (!ch.length) return;
-    h += `<div class="cat-lbl">${CN[cat]}</div>`;
+    const catLabel = CN[cat] || getCatName(cat) || cat;
+    h += `<div class="cat-lbl">${catLabel}</div>`;
     ch.forEach(x => {
       const log = tl[x.id], str = getStr(x.id);
       const sc = habitScore(x, log);
