@@ -516,6 +516,34 @@ select option{background:var(--s2);}
 .eh-ttl{font-size:0.93rem;font-weight:700;margin-bottom:0.9rem;color:var(--t1);}
 .eh-ttl em{color:var(--ac);font-style:normal;}
 
+/* ═══ NAV PROFILE + LOGOUT ═══ */
+.nav-prof-btn{padding:0.2rem 0.55rem;border-radius:5px;border:1px solid var(--b2);background:transparent;
+  color:var(--t2);font-family:var(--mono);font-size:0.6rem;cursor:pointer;transition:all 0.13s;max-width:100px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nav-prof-btn:hover{border-color:var(--ac);color:var(--ac);}
+.nav-logout-btn{width:26px;height:26px;border-radius:5px;border:1px solid var(--b2);background:transparent;
+  color:var(--t4);font-size:0.75rem;cursor:pointer;transition:all 0.13s;display:flex;align-items:center;justify-content:center;}
+.nav-logout-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* ═══ PROFILE CARD ═══ */
+.profile-card{display:flex;align-items:center;gap:0.85rem;background:var(--s1);border:1px solid var(--b1);
+  border-radius:12px;padding:0.9rem 1rem;}
+.prof-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--g2));
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;
+  border:2px solid rgba(124,106,247,0.3);}
+.prof-info{flex:1;min-width:0;}
+.prof-name{font-size:0.95rem;font-weight:800;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.prof-uid{font-family:var(--mono);font-size:0.62rem;color:var(--g2);margin-top:0.1rem;}
+.prof-badge{font-family:var(--mono);font-size:0.55rem;padding:0.1rem 0.45rem;border-radius:4px;
+  background:rgba(247,194,106,0.15);border:1px solid rgba(247,194,106,0.35);color:var(--g2);}
+.prof-badge-free{background:rgba(80,80,120,0.2);border:1px solid var(--b2);color:var(--t4);}
+
+/* ═══ DRAG REORDER for subj/cat ═══ */
+.subj-row,.cat-row{cursor:default;}
+.subj-row.dragging,.cat-row.dragging{opacity:0.35;border-color:var(--ac);}
+.subj-row.dragover,.cat-row.dragover{border-color:var(--g3);border-style:dashed;}
+.drag-handle{color:var(--t4);font-size:0.7rem;cursor:grab;padding:0 0.25rem;flex-shrink:0;}
+
 @media(max-width:640px){
   nav{padding:0 1rem;}.nav-r{display:none;}
   .t-hdr,.sp-hdr,.an-hdr,.set-w,.tl-hdr{padding-left:1rem;padding-right:1rem;}
@@ -527,13 +555,7 @@ select option{background:var(--s2);}
 </head>
 <body>
 
-<div class="jo" id="jo">
-  <div class="jo-logo">LIFE OS v1.0</div>
-  <div class="jo-title">তোমার Journey<br><em>শুরু হোক আজ থেকে</em></div>
-  <div class="jo-sub">একবার START করলে আর কোনোদিন data delete করা যাবে না।<br>এটা তোমার জীবনের সবচেয়ে গুরুত্বপূর্ণ record।</div>
-  <button class="jo-btn" onclick="startJ()">🚀 START MY JOURNEY</button>
-  <div class="jo-warn">⚠️ এই button একবারই চাপা যাবে — সাবধানে চাপো</div>
-</div>
+<!-- jo screen removed -->
 
 <!-- BLOCKED SCREEN -->
 <div class="blocked-screen" id="blocked-screen">
@@ -601,7 +623,13 @@ select option{background:var(--s2);}
     <button class="ntab" onclick="goPage('analysis')">ANALYSIS</button>
     <button class="ntab" onclick="goPage('settings')">MANAGE</button>
   </div>
-  <div class="nav-r" id="nav-r"></div>
+  <div style="display:flex;align-items:center;gap:0.5rem">
+    <div class="nav-r" id="nav-r"></div>
+    <button class="nav-prof-btn" id="nav-prof-btn" onclick="goPage('settings')" style="display:none">
+      <span id="nav-prof-name"></span>
+    </button>
+    <button class="nav-logout-btn" id="nav-logout-btn" onclick="authLogout()" style="display:none" title="Logout">⏻</button>
+  </div>
 </nav>
 
 <div class="page on" id="page-today">
@@ -797,15 +825,35 @@ select option{background:var(--s2);}
   <div class="set-w">
     <div class="set-hdr">
       <div class="set-ttl">Manage</div>
-      <div class="set-sub">Habits, data, streaks — সব কিছু control করো</div>
+      <div class="set-sub">Habits, data, profile — সব কিছু control করো</div>
     </div>
 
     <!-- Stats bar -->
     <div class="set-statsbar" id="set-stats"></div>
 
-    <!-- Custom Subjects -->
+    <!-- ═══ USER PROFILE ═══ -->
     <div class="set-s">
-      <div class="set-sl">📚 Study Subjects</div>
+      <div class="set-sl">👤 My Profile</div>
+      <div class="profile-card" id="profile-card">
+        <div class="prof-avatar" id="prof-avatar">?</div>
+        <div class="prof-info">
+          <div class="prof-name" id="prof-name-disp">—</div>
+          <div class="prof-uid" id="prof-uid-disp">USR-XXXX</div>
+          <div style="display:flex;gap:0.4rem;margin-top:0.5rem;flex-wrap:wrap">
+            <span class="prof-badge" id="prof-premium-badge" style="display:none">⭐ Premium</span>
+            <span class="prof-badge prof-badge-free" id="prof-free-badge">Free</span>
+          </div>
+        </div>
+        <button class="btn btn-g btn-sm" onclick="openProfileEdit()" style="flex-shrink:0">✏️ Edit</button>
+      </div>
+    </div>
+
+    <!-- ═══ STUDY SUBJECTS ═══ -->
+    <div class="set-s">
+      <div class="set-sl-row">
+        <div class="set-sl">📚 Study Subjects</div>
+        <span style="font-size:0.57rem;color:var(--t4);font-family:var(--mono)">drag ⠿ to reorder</span>
+      </div>
       <div id="subj-list" style="margin-bottom:0.6rem"></div>
       <div style="display:flex;gap:0.4rem;align-items:flex-end;flex-wrap:wrap">
         <div style="flex:1;min-width:120px"><label class="lbl">Subject নাম</label><input id="new-subj-name" placeholder="যেমন: Physics"></div>
@@ -814,9 +862,12 @@ select option{background:var(--s2);}
       </div>
     </div>
 
-    <!-- Custom Categories -->
+    <!-- ═══ HABIT CATEGORIES ═══ -->
     <div class="set-s">
-      <div class="set-sl">🏷️ Habit Categories</div>
+      <div class="set-sl-row">
+        <div class="set-sl">🏷️ Habit Categories</div>
+        <span style="font-size:0.57rem;color:var(--t4);font-family:var(--mono)">drag ⠿ to reorder</span>
+      </div>
       <div id="cat-list" style="margin-bottom:0.6rem"></div>
       <div style="display:flex;gap:0.4rem;align-items:flex-end;flex-wrap:wrap">
         <div style="flex:1;min-width:80px"><label class="lbl">Icon</label><input id="new-cat-icon" placeholder="🎯" maxlength="4" style="width:100%"></div>
@@ -826,18 +877,16 @@ select option{background:var(--s2);}
       </div>
     </div>
 
-    <!-- Habit list -->
+    <!-- ═══ HABITS LIST ═══ -->
     <div class="set-s">
       <div class="set-sl-row">
         <div class="set-sl">📋 Habits <span id="set-hcount" class="set-hcnt"></span></div>
-        <div style="display:flex;gap:0.4rem;align-items:center">
-          <input id="hlist-search" placeholder="Search..." style="width:140px;padding:0.28rem 0.55rem;font-size:0.65rem;" oninput="filterHList(this.value)">
-        </div>
+        <input id="hlist-search" placeholder="Search..." style="width:130px;padding:0.28rem 0.55rem;font-size:0.65rem;" oninput="filterHList(this.value)">
       </div>
       <div id="hlist"></div>
     </div>
 
-    <!-- Add new habit -->
+    <!-- ═══ ADD HABIT ═══ -->
     <div class="set-s">
       <div class="set-sl">➕ Add New Habit</div>
       <div class="add-f">
@@ -847,9 +896,7 @@ select option{background:var(--s2);}
           <div class="field" style="margin:0"><label class="lbl">TARGET</label><input id="ntg" placeholder="e.g. 30 mins"></div>
         </div>
         <div class="f2" style="margin-top:0.42rem">
-          <div class="field" style="margin:0"><label class="lbl">CATEGORY</label>
-            <select id="nc"></select>
-          </div>
+          <div class="field" style="margin:0"><label class="lbl">CATEGORY</label><select id="nc"></select></div>
           <div class="field" style="margin:0"><label class="lbl">TYPE</label>
             <select id="nt"><option value="rating">⭐ Rating 1-5</option><option value="done">✅ Done/Skip</option><option value="time">⏱ Time (mins)</option></select>
           </div>
@@ -858,41 +905,26 @@ select option{background:var(--s2);}
       </div>
     </div>
 
-    <!-- Reorder habits -->
+    <!-- ═══ REORDER HABITS ═══ -->
     <div class="set-s">
       <div class="set-sl">🔀 Reorder Habits</div>
       <div id="horder-list" class="horder-wrap"></div>
     </div>
 
-    <!-- Data management -->
+    <!-- ═══ DATA MANAGEMENT ═══ -->
     <div class="set-s">
       <div class="set-sl">💾 Data Management</div>
       <div class="data-cards">
-        <div class="data-card" onclick="expJSON()">
-          <div class="dc-ico">📦</div>
-          <div class="dc-info"><div class="dc-ttl">Export Backup</div><div class="dc-sub">JSON file download</div></div>
-        </div>
-        <div class="data-card" onclick="impJSON()">
-          <div class="dc-ico">📂</div>
-          <div class="dc-info"><div class="dc-ttl">Import Backup</div><div class="dc-sub">Restore from JSON</div></div>
-        </div>
-        <div class="data-card" onclick="expCSV()">
-          <div class="dc-ico">📊</div>
-          <div class="dc-info"><div class="dc-ttl">Export CSV</div><div class="dc-sub">Spreadsheet format</div></div>
-        </div>
-        <div class="data-card" onclick="expTxt()">
-          <div class="dc-ico">📋</div>
-          <div class="dc-info"><div class="dc-ttl">Copy for Claude</div><div class="dc-sub">AI analysis ready</div></div>
-        </div>
+        <div class="data-card" onclick="expJSON()"><div class="dc-ico">📦</div><div class="dc-info"><div class="dc-ttl">Export Backup</div><div class="dc-sub">JSON file download</div></div></div>
+        <div class="data-card" onclick="impJSON()"><div class="dc-ico">📂</div><div class="dc-info"><div class="dc-ttl">Import Backup</div><div class="dc-sub">Restore from JSON</div></div></div>
+        <div class="data-card" onclick="expCSV()"><div class="dc-ico">📊</div><div class="dc-info"><div class="dc-ttl">Export CSV</div><div class="dc-sub">Spreadsheet format</div></div></div>
+        <div class="data-card" onclick="expTxt()"><div class="dc-ico">📋</div><div class="dc-info"><div class="dc-ttl">Copy for Claude</div><div class="dc-sub">AI analysis ready</div></div></div>
       </div>
     </div>
 
-    <!-- Danger zone — hidden, revealed by secret triple-click -->
+    <!-- ═══ DANGER ZONE ═══ -->
     <div class="set-s">
-      <div class="set-sl" id="danger-trigger" onclick="dangerClick()" style="cursor:pointer;user-select:none;">
-        ⚙️ Advanced
-        <span style="font-size:0.5rem;color:var(--t4);margin-left:0.4rem">(click 3×)</span>
-      </div>
+      <div class="set-sl" id="danger-trigger" onclick="dangerClick()" style="cursor:pointer;user-select:none;">⚙️ Advanced <span style="font-size:0.5rem;color:var(--t4);margin-left:0.4rem">(click 3×)</span></div>
       <div id="danger-zone" style="display:none">
         <div class="danger-box">
           <div class="danger-warn">⚠️ Danger Zone — এখানে যা করবে তা undo হবে না</div>
@@ -906,8 +938,47 @@ select option{background:var(--s2);}
       </div>
     </div>
 
+  </div>
+</div>
 
+<!-- PROFILE EDIT MODAL -->
+<div class="mbg" id="prof-modal">
+  <div class="modal" style="max-width:340px">
+    <div class="m-ttl">✏️ Edit <em>Profile</em></div>
+    <div class="field"><label class="lbl">নাম</label><input id="prof-edit-name" placeholder="তোমার নাম"></div>
+    <div class="field"><label class="lbl">Avatar Emoji</label><input id="prof-edit-avatar" placeholder="😎" maxlength="4"></div>
+    <div class="field"><label class="lbl">Password পরিবর্তন করো (ফাঁকা রাখলে change হবে না)</label><input id="prof-edit-pass" type="password" placeholder="নতুন password (কমপক্ষে ৬ অক্ষর)"></div>
+    <div class="m-acts">
+      <button class="btn btn-g" onclick="closeProfModal()">Cancel</button>
+      <button class="btn btn-p" onclick="saveProfile()">💾 Save</button>
+    </div>
+  </div>
+</div>
 
+<!-- EDIT SUBJECT MODAL -->
+<div class="mbg" id="subj-edit-modal">
+  <div class="modal" style="max-width:320px">
+    <div class="m-ttl">✏️ Edit <em>Subject</em></div>
+    <div class="field"><label class="lbl">নাম</label><input id="se-name" placeholder="Subject নাম"></div>
+    <div class="field"><label class="lbl">রং</label><input id="se-color" type="color" style="height:38px;padding:2px 4px;cursor:pointer"></div>
+    <div class="m-acts">
+      <button class="btn btn-g" onclick="closeSubjEdit()">Cancel</button>
+      <button class="btn btn-p" onclick="saveSubjEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT CATEGORY MODAL -->
+<div class="mbg" id="cat-edit-modal">
+  <div class="modal" style="max-width:320px">
+    <div class="m-ttl">✏️ Edit <em>Category</em></div>
+    <div class="field"><label class="lbl">Icon</label><input id="ce-icon" placeholder="🎯" maxlength="4"></div>
+    <div class="field"><label class="lbl">নাম</label><input id="ce-name" placeholder="Category নাম"></div>
+    <div class="field"><label class="lbl">রং</label><input id="ce-color" type="color" style="height:38px;padding:2px 4px;cursor:pointer"></div>
+    <div class="m-acts">
+      <button class="btn btn-g" onclick="closeCatEdit()">Cancel</button>
+      <button class="btn btn-p" onclick="saveCatEdit()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -1127,7 +1198,22 @@ function loginSuccess(uid){
   _currentUserRef=_fbDB.ref('users/'+uid+'/data');
   document.getElementById('auth-bg').classList.add('gone');
   document.getElementById('auth-success').classList.add('gone');
+  // Hide jo screen always after login
+  const jo=document.getElementById('jo');if(jo)jo.classList.add('gone');
   spD=tKey();
+  // Show nav profile + logout buttons
+  const npb=document.getElementById('nav-prof-btn');
+  const nlb=document.getElementById('nav-logout-btn');
+  if(npb)npb.style.display='';
+  if(nlb)nlb.style.display='';
+  // Load profile for nav display
+  _fbDB.ref('users/'+uid+'/profile').once('value').then(snap=>{
+    const p=snap.val()||{};
+    _currentProfile=p;
+    const nameEl=document.getElementById('nav-prof-name');
+    if(nameEl)nameEl.textContent=p.name||uid;
+    rProfileCard();
+  });
   // Load user data
   _currentUserRef.on('value',snap=>{
     const remote=snap.val();
@@ -1137,11 +1223,61 @@ function loginSuccess(uid){
         if(!db[k])db[k]=k==='habits'?[]:k==='logs'||k==='dp'?{}:[];
       });
     }
+    if(!db.jStart){db.jStart=tKey();sv();}
     refreshCatMaps();
     populateCatDropdowns();
+    checkJ();
     rToday();rSet&&rSet();
   });
   toast('👋 Welcome back!');
+}
+
+let _currentProfile={};
+
+function rProfileCard(){
+  const p=_currentProfile||{};
+  const uid=_currentUserId||'';
+  const avatar=document.getElementById('prof-avatar');
+  const nameD=document.getElementById('prof-name-disp');
+  const uidD=document.getElementById('prof-uid-disp');
+  const premBadge=document.getElementById('prof-premium-badge');
+  const freeBadge=document.getElementById('prof-free-badge');
+  if(avatar)avatar.textContent=p.avatar||p.name?.[0]?.toUpperCase()||'👤';
+  if(nameD)nameD.textContent=p.name||'—';
+  if(uidD)uidD.textContent=uid;
+  if(premBadge)premBadge.style.display=p.premium?'':'none';
+  if(freeBadge)freeBadge.style.display=p.premium?'none':'';
+  const nameEl=document.getElementById('nav-prof-name');
+  if(nameEl)nameEl.textContent=p.name||uid;
+}
+
+function openProfileEdit(){
+  const p=_currentProfile||{};
+  document.getElementById('prof-edit-name').value=p.name||'';
+  document.getElementById('prof-edit-avatar').value=p.avatar||'';
+  document.getElementById('prof-edit-pass').value='';
+  document.getElementById('prof-modal').classList.add('on');
+}
+function closeProfModal(){document.getElementById('prof-modal').classList.remove('on');}
+async function saveProfile(){
+  const name=document.getElementById('prof-edit-name').value.trim();
+  const avatar=document.getElementById('prof-edit-avatar').value.trim();
+  const pass=document.getElementById('prof-edit-pass').value;
+  if(!name){toast('নাম দাও!');return;}
+  if(pass&&pass.length<6){toast('Password কমপক্ষে ৬ অক্ষর!');return;}
+  const uid=_currentUserId;if(!uid)return;
+  const updates={};
+  updates['users/'+uid+'/profile/name']=name;
+  updates['users/'+uid+'/profile/avatar']=avatar||_currentProfile.avatar||'';
+  updates['users/'+uid+'/profile/lastActive']=new Date().toISOString();
+  if(pass)updates['users/'+uid+'/profile/passwordHash']=hashPass(pass);
+  try{
+    await _fbDB.ref().update(updates);
+    _currentProfile={..._currentProfile,name,avatar};
+    rProfileCard();
+    closeProfModal();
+    toast('✅ Profile updated!');
+  }catch(e){toast('❌ Error: '+e.message);}
 }
 
 function showBlocked(){
@@ -1151,10 +1287,14 @@ function showBlocked(){
 
 function authLogout(){
   localStorage.removeItem('lifeos_uid');
-  _currentUserId=null;
+  _currentUserId=null;_currentProfile={};
   if(_currentUserRef)_currentUserRef.off();
   document.getElementById('blocked-screen').classList.remove('on');
   document.getElementById('auth-bg').classList.remove('gone');
+  const npb=document.getElementById('nav-prof-btn');
+  const nlb=document.getElementById('nav-logout-btn');
+  if(npb)npb.style.display='none';
+  if(nlb)nlb.style.display='none';
 }
 
 function setAuthErr(msg){document.getElementById('auth-err').textContent=msg;}
@@ -1175,6 +1315,8 @@ function _initFB(){
 }
 
 function load(){
+  // Always hide jo screen
+  const jo=document.getElementById('jo');if(jo)jo.classList.add('gone');
   if(!_initFB()){toast('⚠️ Firebase connect হয়নি');return;}
   // Check saved login
   const savedUid=localStorage.getItem('lifeos_uid');
@@ -1217,9 +1359,11 @@ function seed(){
 }
 
 function checkJ(){
-  if(!_currentUserId)return;
-  document.getElementById('jo').classList.toggle('gone',!!db.jStart);
+  // jo screen is no longer shown — journey starts automatically on first login
+  const jo=document.getElementById('jo');if(jo)jo.classList.add('gone');
   const b=document.getElementById('clr-btn');if(b)b.style.display=db.jStart?'none':'';
+  // Auto-start journey if not started yet
+  if(_currentUserId&&!db.jStart){db.jStart=tKey();sv();}
 }
 function startJ(){
   if(!confirm('Journey শুরু করবে? Data delete option চিরতরে চলে যাবে।'))return;
@@ -2079,6 +2223,78 @@ function delCategory(i){
   sv();rSet();rToday();toast('🗑 Category removed');
 }
 
+// ═══ DRAG REORDER FOR SUBJECTS/CATEGORIES ═══
+function initDragList(container, type){
+  let dragI=null;
+  container.querySelectorAll('[draggable]').forEach(el=>{
+    el.addEventListener('dragstart',()=>{
+      dragI=+(type==='subj'?el.dataset.si:el.dataset.ci);
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('dragover');});
+    el.addEventListener('dragleave',()=>el.classList.remove('dragover'));
+    el.addEventListener('drop',()=>{
+      el.classList.remove('dragover');
+      const toI=+(type==='subj'?el.dataset.si:el.dataset.ci);
+      if(dragI===null||dragI===toI)return;
+      if(type==='subj'){
+        if(!db.subjects||!db.subjects.length)return;
+        const moved=db.subjects.splice(dragI,1)[0];
+        db.subjects.splice(toI,0,moved);
+      } else {
+        const cats=getCats();
+        if(!db.categories)db.categories=[...cats];
+        const moved=db.categories.splice(dragI,1)[0];
+        db.categories.splice(toI,0,moved);
+      }
+      sv();rSet();toast('✓ Reordered!');
+    });
+  });
+}
+
+// ═══ EDIT SUBJECT ═══
+let _editSubjIdx=null;
+function editSubject(i){
+  const s=getSubjs()[i];if(!s)return;
+  _editSubjIdx=i;
+  document.getElementById('se-name').value=s.n;
+  document.getElementById('se-color').value=s.c||'#7c6af7';
+  document.getElementById('subj-edit-modal').classList.add('on');
+}
+function closeSubjEdit(){document.getElementById('subj-edit-modal').classList.remove('on');_editSubjIdx=null;}
+function saveSubjEdit(){
+  if(_editSubjIdx===null)return;
+  const name=document.getElementById('se-name').value.trim();
+  const color=document.getElementById('se-color').value;
+  if(!name){toast('নাম দাও!');return;}
+  if(!db.subjects)db.subjects=getSubjs();
+  db.subjects[_editSubjIdx]={...db.subjects[_editSubjIdx],n:name,c:color};
+  sv();rSet();closeSubjEdit();toast('✅ Subject updated!');
+}
+
+// ═══ EDIT CATEGORY ═══
+let _editCatIdx=null;
+function editCategory(i){
+  const cats=getCats();const c=cats[i];if(!c)return;
+  _editCatIdx=i;
+  document.getElementById('ce-icon').value=c.icon||'';
+  document.getElementById('ce-name').value=c.name||'';
+  document.getElementById('ce-color').value=c.color||'#7c6af7';
+  document.getElementById('cat-edit-modal').classList.add('on');
+}
+function closeCatEdit(){document.getElementById('cat-edit-modal').classList.remove('on');_editCatIdx=null;}
+function saveCatEdit(){
+  if(_editCatIdx===null)return;
+  const icon=document.getElementById('ce-icon').value.trim()||'🏷️';
+  const name=document.getElementById('ce-name').value.trim();
+  const color=document.getElementById('ce-color').value;
+  if(!name){toast('নাম দাও!');return;}
+  if(!db.categories)db.categories=[...getCats()];
+  db.categories[_editCatIdx]={...db.categories[_editCatIdx],icon,name,color};
+  sv();refreshCatMaps();populateCatDropdowns();rSet();rToday();closeCatEdit();toast('✅ Category updated!');
+}
+
 function resetJourney(){
   if(!confirm('Journey Day counter reset করবে? আজ থেকে DAY 001 শুরু হবে। Data মুছবে না।'))return;
   db.jStart=tKey();sv();rToday();rSet();
@@ -2101,31 +2317,42 @@ function dangerClick(){
 
 function rSet(){
   refreshCatMaps();
+  rProfileCard();
   // Render subjects
   const subjList=document.getElementById('subj-list');
   if(subjList){
     const subjs=getSubjs();
-    subjList.innerHTML=subjs.length?subjs.map((s,i)=>`
-      <div class="subj-row">
-        <div class="subj-dot" style="background:${s.c}"></div>
-        <div class="subj-name">${s.n}</div>
-        <div class="subj-btns">
-          <button class="smb del" onclick="delSubject(${i})">✕</button>
-        </div>
-      </div>`).join(''):'<div style="color:var(--t4);font-family:var(--mono);font-size:0.7rem">Subject নেই — নিচে add করো।</div>';
+    if(!subjs.length){
+      subjList.innerHTML='<div style="color:var(--t4);font-family:var(--mono);font-size:0.7rem">Subject নেই — নিচে add করো।</div>';
+    } else {
+      subjList.innerHTML=subjs.map((s,i)=>`
+        <div class="subj-row" draggable="true" data-si="${i}">
+          <span class="drag-handle">⠿</span>
+          <div class="subj-dot" style="background:${s.c}"></div>
+          <div class="subj-name">${s.n}</div>
+          <div class="subj-btns">
+            <button class="smb" onclick="editSubject(${i})">✏️</button>
+            <button class="smb del" onclick="delSubject(${i})">✕</button>
+          </div>
+        </div>`).join('');
+      initDragList(subjList,'subj');
+    }
   }
   // Render categories
   const catList=document.getElementById('cat-list');
   if(catList){
     const cats=getCats();
     catList.innerHTML=cats.map((c,i)=>`
-      <div class="cat-row">
+      <div class="cat-row" draggable="true" data-ci="${i}">
+        <span class="drag-handle">⠿</span>
         <div class="cat-dot" style="background:${c.color}"></div>
         <div class="cat-name">${c.icon} ${c.name}</div>
         <div class="subj-btns">
+          <button class="smb" onclick="editCategory(${i})">✏️</button>
           ${i>=5?`<button class="smb del" onclick="delCategory(${i})">✕</button>`:'<span style="font-size:0.6rem;color:var(--t4);font-family:var(--mono)">default</span>'}
         </div>
       </div>`).join('');
+    initDragList(catList,'cat');
   }
   // Stats
   const totalDays=Object.keys(db.logs).length;
@@ -2239,6 +2466,12 @@ document.getElementById('lmodal').addEventListener('click',e=>{if(e.target===doc
 document.getElementById('wmodal').addEventListener('click',e=>{if(e.target===document.getElementById('wmodal'))closeWM();});
 document.getElementById('ddmodal').addEventListener('click',e=>{if(e.target===document.getElementById('ddmodal'))closeDDM();});
 document.getElementById('ehmodal').addEventListener('click',e=>{if(e.target===document.getElementById('ehmodal'))closeEH();});
+document.getElementById('prof-modal').addEventListener('click',e=>{if(e.target===document.getElementById('prof-modal'))closeProfModal();});
+document.getElementById('subj-edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('subj-edit-modal'))closeSubjEdit();});
+document.getElementById('cat-edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('cat-edit-modal'))closeCatEdit();});
+document.getElementById('prof-modal').addEventListener('click',e=>{if(e.target===document.getElementById('prof-modal'))closeProfModal();});
+document.getElementById('subj-edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('subj-edit-modal'))closeSubjEdit();});
+document.getElementById('cat-edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('cat-edit-modal'))closeCatEdit();});
 </script>
 </body>
 </html>
